@@ -4,18 +4,18 @@
   import { groupByCause, uniqueById, type Report } from '#lib/kb/causes';
   import { tenantOf } from '#lib/kb/locales';
 
-  // One row per problem. causes.ts places a report by its tenant; the desk's one-day-move reports
-  // (desk-notes.json) are not a month/day flip, so they leave their tenant's group and stand alone.
+  // One row per problem, counted the desk's way: causes.ts files a report by its tenant. The desk's
+  // one-day-move reports (desk-notes.json) are not a month/day flip: they get their own row and stay
+  // counted where they are filed.
   type Problem = 'parser' | 'hint' | 'one-day move' | 'unplaced';
   let { ticket, tickets }: { ticket: number; tickets: Partial<Record<Problem, string>> } = $props();
 
   const rows = $derived(uniqueById(reports as Report[]));
   const merged = $derived(rows.filter((r) => r.mergedInto === ticket));
   const moved = $derived(merged.filter((r) => notes.oneDayMove.includes(r.id)));
-  const flipped = $derived(merged.filter((r) => !notes.oneDayMove.includes(r.id)));
   const problems = $derived(
     [
-      ...groupByCause(flipped, tenantOf).map((g) => ({ problem: g.cause as Problem, reports: g.reports })),
+      ...groupByCause(merged, tenantOf).map((g) => ({ problem: g.cause as Problem, reports: g.reports })),
       ...(moved.length ? [{ problem: 'one-day move' as Problem, reports: moved }] : []),
     ].map((p) => {
       const days = p.reports.map((r) => r.receivedAt.slice(0, 10)).sort();
@@ -33,8 +33,7 @@
 
 <p class="sum">
   <strong>{merged.length}</strong> reports in #{ticket} ·
-  <strong>{problems.length}</strong> {problems.length === 1 ? 'problem' : 'problems'} ·
-  {problems.map((p) => p.reports.length).join(' + ')} = {problems.reduce((n, p) => n + p.reports.length, 0)}
+  <strong>{problems.length}</strong> {problems.length === 1 ? 'problem' : 'problems'}
 </p>
 
 <table>
@@ -54,6 +53,13 @@
     {/each}
   </tbody>
 </table>
+
+{#each problems.filter((p) => p.problem !== 'one-day move') as p (p.problem)}
+  {@const alsoMoved = p.reports.filter((r) => moved.includes(r)).length}
+  {#if alsoMoved}
+    <p class="note">{alsoMoved} of the <code>{p.problem}</code> reports are one-day moves: filed under <code>{p.problem}</code> by tenant, and counted in both rows.</p>
+  {/if}
+{/each}
 
 {#if exportRows !== merged.length}
   <p class="note">The export lists {exportRows} rows for #{ticket}; {exportRows - merged.length} repeat an id and are counted once.</p>
