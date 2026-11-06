@@ -2,7 +2,7 @@
 layout: runbook
 title: '#4471 · three problems, not one'
 owner: FabienCollin21
-status: proposed
+status: open
 reviewed: 2026-11-06
 signature: FabienCollin21
 ---
@@ -13,11 +13,13 @@ signature: FabienCollin21
   import RenderStamp from '#lib/kb/RenderStamp.svelte';
 </script>
 
-[#4471](/kb/incidents/4471) is marked known: one issue, one fix queued. Read report by report,
-it holds three problems. The queued parser fix closes only the first one.
+[#4471](/kb/incidents/4471) was marked known: one issue, one fix queued. Read report by report,
+it holds three problems. Engineering closed #4471 on 5 October with answers for two of them. The
+third is still open.
 
 <Callout kind="warn">
-Not one issue. Each problem below has its own ticket. Shipping the parser fix leaves the other two open.
+#4471 is closed, but the one-day move is not fixed. Its reports were filed under <code>parser</code>, so the
+parser fix marks them done. That fix changes the date order, not the day.
 </Callout>
 
 ## What #4471 holds
@@ -34,8 +36,8 @@ Not one issue. Each problem below has its own ticket. Shipping the parser fix le
 ## The three problems
 
 **`parser`: the shared parser reads every date month first.** A day-first tenant's dates come
-out with day and month swapped: 7 April becomes 4 July. This is the bug #4471 names, and the
-queued fix is for it. It reaches every tenant and every channel.
+out with day and month swapped: 7 April becomes 4 July. This is the bug #4471 names, and engineering
+fixed it. It reached every tenant and every channel.
 
 **`hint`: booking-v3's date field asks for the wrong order.** The form prints `MM/DD/YYYY` under
 the field, so people type month first, and the form reads the tenant's order, day first. The
@@ -57,9 +59,20 @@ tag does not split them either: it guesses from the reporter's browser, and the 
 the tenant and the form they run. The table counts each report once, by id, because the export
 repeats some rows.
 
+## Where each problem stands
+
+Engineering's update when it closed #4471 on 5 October:
+
+| problem | engineering | ticket |
+|---|---|---|
+| `parser` | fixed: `fix(dates): parse dd/mm for eu locales` | closed, completed |
+| `hint` | won't fix: the booking-v3 form is retired | closed, not planned |
+| `one-day move` | not in the update | **open** |
+
 ## For the desk
 
-- Do not close #4471's reports with the parser fix alone. Check `hint` and `one-day move` against their own tickets.
+- Closing #4471 did not close the one-day move. Do not answer those reporters with the parser fix; keep the ticket open until a time-zone fix ships.
+- booking-v3 is retired, so no new `hint` reports should come in. One that does means a tenant still runs the old form.
 - When a report's body does not show a day and month swap, it is not a #4471 duplicate, whatever its subject says.
 
 <RenderStamp {signature} />
